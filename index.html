@@ -194,7 +194,7 @@
 
 <header>
   <h1><span class="sp">Spring</span> ✕ <span class="al">Alma</span> Celebration Bingo</h1>
-  <p class="tag">Meet someone new in every square · first to two rows wins</p>
+  <p class="tag">Meet someone new in every square · first to a row + a column wins</p>
 </header>
 
 <main>
@@ -235,7 +235,7 @@
         <li>Tap the square and record <strong>who</strong> + <strong>the specific detail</strong> that qualifies them.</li>
         <li>Squares tagged <strong style="color:var(--accent)">OTHER SIDE</strong>: if you're Spring, find an Alma person, and vice versa. Untagged squares: anyone in the room.</li>
         <li>Each person can appear only <strong>once</strong> on your card.</li>
-        <li>First to complete <strong>two rows</strong> (across) wins — show your finish screen to the host!</li>
+        <li>First to complete <strong>one row across + one column down</strong> wins — show your finish screen to the host!</li>
         <li>Fill the <strong>entire card</strong> to claim the 🏅 <strong>Overachiever Award</strong>!</li>
       </ul>
     </details>
@@ -244,11 +244,11 @@
   <!-- Host leaderboard (projector screen) -->
   <section id="host" style="display:none">
     <h2 class="lb-title">🏆 Winners' Circle</h2>
-    <p class="lb-sub">First to two rows — in order of submission <span id="lbStatus" style="font-weight:700">· connecting…</span></p>
+    <p class="lb-sub">First to a row + a column — in order of submission <span id="lbStatus" style="font-weight:700">· connecting…</span></p>
     <div class="lb-add panel">
       <input type="text" id="lbName" placeholder="Winner's name" maxlength="40" autocomplete="off">
       <select id="lbSide"><option>Spring</option><option>Alma</option></select>
-      <select id="lbType"><option value="win">Two rows 🏆</option><option value="overachiever">Full card 🏅</option></select>
+      <select id="lbType"><option value="win">Row + column 🏆</option><option value="overachiever">Full card 🏅</option></select>
       <button class="btn btn-primary" style="width:auto;margin-top:0" id="lbAddBtn">Add</button>
     </div>
     <div id="lbWinners"></div>
@@ -341,7 +341,7 @@ const PROMPTS = [
   { text: "Spring team member who is LinkedIn connected with Lyndsey", tag: "spring" },
 ];
 
-const ROWS_TO_WIN = 2;          // the doc: "Whoever gets two rows first wins!"
+// Win rule: one complete horizontal row AND one complete vertical column.
 const STORAGE_KEY = "teamBingo.v2";
 
 let state = null;   // {playerName, side, squares:[{prompt,tag,who,detail}], rowsCelebrated, finished, finishedAt}
@@ -370,12 +370,13 @@ function load(){
 function dealSquares(){
   return shuffle(PROMPTS).map(p => ({ prompt: p.text, tag: p.tag, who: null, detail: null }));
 }
-function completedRows(sqs){
-  const rows = [];
-  for (let r = 0; r < 5; r++) {
-    if ([0,1,2,3,4].every(c => sqs[r*5+c].who)) rows.push(r);
+function completedLines(sqs){
+  const rows = [], cols = [];
+  for (let i = 0; i < 5; i++) {
+    if ([0,1,2,3,4].every(c => sqs[i*5+c].who)) rows.push(i);
+    if ([0,1,2,3,4].every(r => sqs[r*5+i].who)) cols.push(i);
   }
-  return rows;
+  return { rows, cols };
 }
 function otherSide(side){ return side === "Spring" ? "Alma" : "Spring"; }
 function tagLabel(tag){
@@ -394,13 +395,13 @@ function render(){
   sideEl.textContent = state.side;
   sideEl.className = "badge " + state.side.toLowerCase();
 
-  const rows = completedRows(state.squares);
+  const { rows, cols } = completedLines(state.squares);
   $("rowMeter").innerHTML =
-    `Rows: <span class="done">${rows.length}</span> / ${ROWS_TO_WIN} to win` +
-    (rows.length === 1 ? " — one more!" : "");
+    `To win: row across <span class="done">${rows.length ? "✓" : "…"}</span> + column down <span class="done">${cols.length ? "✓" : "…"}</span>`;
 
   const winSet = new Set();
   rows.forEach(r => [0,1,2,3,4].forEach(c => winSet.add(r*5+c)));
+  cols.forEach(c => [0,1,2,3,4].forEach(r => winSet.add(r*5+c)));
 
   const grid = $("grid");
   grid.innerHTML = "";
@@ -470,7 +471,7 @@ function clearSquare(){
 }
 function finishMove(){
   closeSquare();
-  const rows = completedRows(state.squares);
+  const { rows, cols } = completedLines(state.squares);
   const now = () => new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit", second:"2-digit"});
   if (state.squares.every(sq => sq.who) && !state.blackout) {
     state.blackout = true;
@@ -479,16 +480,20 @@ function finishMove(){
     publishWin("overachiever");
     return;
   }
-  if (rows.length >= ROWS_TO_WIN && !state.finished) {
+  if (rows.length && cols.length && !state.finished) {
     state.finished = true;
     state.finishedAt = now();
     save(); render(); celebrateFinish("win");
     publishWin("win");
     return;
   }
-  if (rows.length > (state.rowsCelebrated || 0) && rows.length < ROWS_TO_WIN) {
-    state.rowsCelebrated = rows.length;
-    showToast(`🎉 Row complete! ${ROWS_TO_WIN - rows.length} more to win!`);
+  if (rows.length && !cols.length && !state.rowCelebrated) {
+    state.rowCelebrated = true;
+    showToast("🎉 Row complete! Now finish a column ↕️ to win!");
+  }
+  if (cols.length && !rows.length && !state.colCelebrated) {
+    state.colCelebrated = true;
+    showToast("🎉 Column complete! Now finish a row ↔️ to win!");
   }
   save(); render();
 }
@@ -504,14 +509,14 @@ function showToast(msg){
 }
 function celebrateFinish(mode){
   const over = mode === "overachiever";
-  $("finishTitle").textContent = over ? "🏅 OVERACHIEVER!" : "DOUBLE BINGO!";
+  $("finishTitle").textContent = over ? "🏅 OVERACHIEVER!" : "CRISS-CROSS BINGO!";
   $("finishShow").textContent = over
     ? "🏅 Full card! Show the host to claim the Overachiever Award!"
     : "🏆 Show this screen to the host to claim your place!";
   $("finishWho").textContent = `${state.playerName} · ${state.side} side`;
   $("finishTime").textContent = over
     ? `Filled all 25 squares at ${state.blackoutAt}`
-    : `Finished two rows at ${state.finishedAt}`;
+    : `Completed a row + a column at ${state.finishedAt}`;
   const met = $("finishMet");
   met.innerHTML = "";
   state.squares.filter(s => s.who).forEach(s => {
@@ -540,7 +545,8 @@ function startGame(existing){
     playerName: $("playerName").value.trim(),
     side: pickedSide,
     squares: dealSquares(),
-    rowsCelebrated: 0,
+    rowCelebrated: false,
+    colCelebrated: false,
     finished: false,
     finishedAt: null,
   };
@@ -577,8 +583,8 @@ function buildPrintSheets(n){
         <strong>How to play:</strong> For squares marked [OTHER SIDE], find someone from the other side of the
         product than you (Spring ↔ Alma). [SPRING]/[ALMA] squares need a person from that team. Anyone in the room
         qualifies for the rest. To claim a square, document <strong>who</strong> and the <strong>specific detail</strong>
-        that qualifies them. Each person may appear only once on your card. <strong>Whoever gets two rows first wins!</strong>
-        Fill the entire card to claim the Overachiever Award!
+        that qualifies them. Each person may appear only once on your card. <strong>Whoever completes one row across
+        + one column down first wins!</strong> Fill the entire card to claim the Overachiever Award!
       </div>`;
     area.appendChild(sheet);
   }

@@ -14,7 +14,7 @@ A single-page web app for a live in-person celebration mixer (~120 people) acros
 1. **5×5 card, no FREE square** — the 25 prompts fill the grid exactly; each card shuffles their positions so neighbors' cards differ.
 2. **Cross-side rule**: prompts that mention Spring or Alma must be matched by someone from the *other* side of the product than the player. All other prompts: anyone in the room qualifies. The app labels these squares and asks the player which side they're on at start.
 3. **Documentation rule**: to claim a square the player records *who* AND *the specific detail* that qualifies them (e.g. "Maya — 14 subscriptions").
-4. **Win condition**: first player to complete **two rows** wins. (Stakeholder earlier chose "first bingo"; the doc's two-row rule supersedes — implement two rows, keep the threshold a one-line config.)
+4. **Win condition** (updated 2026-08-12 by stakeholder): first player to complete **one row across + one column down** (a criss-cross) wins. Supersedes the doc's "two rows" rule and the earlier "first bingo" choice.
 
 ## Functional Requirements
 - **FR1 Onboarding**: player enters name + picks their side (Spring / Alma); gets a shuffled card.
