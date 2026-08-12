@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring ✕ Alma Celebration Bingo</title>
+<style>
+  :root{
+    --ink:#1f2333;
+    --paper:#f7f5f0;
+    --card:#ffffff;
+    --spring:#2e9e6b;     /* Spring side */
+    --alma:#7a5af5;       /* Alma side */
+    --accent:#e85d75;
+    --gold:#f5b841;
+    --line:#e3ddd2;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);color:var(--ink);min-height:100vh;
+  }
+  header{text-align:center;padding:20px 16px 6px}
+  header h1{font-size:1.35rem;letter-spacing:.3px}
+  header h1 .sp{color:var(--spring)} header h1 .al{color:var(--alma)}
+  header p.tag{color:#6b6f80;font-size:.82rem;margin-top:4px}
+  main{max-width:560px;margin:0 auto;padding:12px 10px 48px}
+
+  .panel{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;box-shadow:0 2px 10px rgba(31,35,51,.05);margin-top:12px;
+  }
+  .panel label{display:block;font-weight:600;margin:14px 0 6px}
+  .panel label:first-child{margin-top:0}
+  input[type=text]{
+    width:100%;padding:12px 14px;font-size:1rem;border:2px solid var(--line);
+    border-radius:10px;outline:none;background:#fff;color:var(--ink);
+  }
+  input[type=text]:focus{border-color:var(--alma)}
+  .side-pick{display:flex;gap:10px}
+  .side-btn{
+    flex:1;padding:14px 8px;border:2px solid var(--line);border-radius:10px;background:#fff;
+    font-size:1rem;font-weight:700;cursor:pointer;color:var(--ink);
+  }
+  .side-btn.spring.sel{border-color:var(--spring);background:#e9f7f0;color:var(--spring)}
+  .side-btn.alma.sel{border-color:var(--alma);background:#f1edfe;color:var(--alma)}
+  .btn{
+    display:inline-block;border:none;border-radius:10px;padding:12px 20px;
+    font-size:1rem;font-weight:700;cursor:pointer;transition:transform .06s ease;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--accent);color:#fff;width:100%;margin-top:16px}
+  .btn-ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+  .btn-small{padding:8px 14px;font-size:.85rem}
+  .hint{font-size:.8rem;color:#6b6f80;margin-top:10px;line-height:1.5}
+
+  /* ---------- Toolbar / progress ---------- */
+  .toolbar{display:flex;gap:8px;justify-content:space-between;align-items:center;margin:10px 0;flex-wrap:wrap}
+  .who{font-weight:700;font-size:.95rem}
+  .who .badge{
+    display:inline-block;padding:2px 8px;border-radius:20px;font-size:.72rem;color:#fff;vertical-align:middle;margin-left:4px;
+  }
+  .badge.spring{background:var(--spring)} .badge.alma{background:var(--alma)}
+  .rowmeter{font-size:.85rem;font-weight:700;color:#6b6f80;margin:2px 0 8px;text-align:center}
+  .rowmeter .done{color:var(--accent)}
+
+  /* ---------- Grid ---------- */
+  .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+  .sq{max-width:100%;overflow:hidden;word-break:break-word}
+  .sq{
+    position:relative;background:var(--card);border:1px solid var(--line);
+    border-radius:9px;padding:6px 3px;min-height:96px;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    text-align:center;cursor:pointer;font-size:.58rem;line-height:1.25;
+    -webkit-user-select:none;user-select:none;
+  }
+  @media(min-width:480px){ .sq{font-size:.7rem;min-height:104px} }
+  .sq:hover{border-color:var(--alma)}
+  .sq.filled{background:#e9f7f0;border-color:var(--spring)}
+  .sq .name{
+    margin-top:4px;font-weight:800;color:var(--spring);font-size:.62rem;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .sq.filled::after{
+    content:"✓";position:absolute;top:2px;right:5px;color:var(--spring);font-weight:900;font-size:.7rem;
+  }
+  .sq .tagchip{
+    order:-1;margin-bottom:3px;font-size:.48rem;font-weight:800;
+    padding:1px 3px;border-radius:6px;color:#fff;white-space:nowrap;
+  }
+  .tagchip.cross{background:var(--accent)}
+  .tagchip.spring{background:var(--spring)}
+  .tagchip.alma{background:var(--alma)}
+  .sq.winrow{outline:3px solid var(--gold);outline-offset:-2px}
+
+  details.rules{margin-top:14px}
+  details.rules summary{cursor:pointer;font-weight:700;padding:10px 0}
+  details.rules ul{padding:4px 0 8px 20px;font-size:.88rem;line-height:1.6}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(31,35,51,.55);
+    display:none;align-items:center;justify-content:center;padding:16px;z-index:50;
+  }
+  .overlay.show{display:flex}
+  .modal{background:#fff;border-radius:var(--radius);padding:20px;max-width:420px;width:100%;max-height:92vh;overflow:auto}
+  .modal .prompt{font-weight:700;margin-bottom:6px;line-height:1.4}
+  .modal .crossnote{
+    font-size:.8rem;font-weight:700;padding:7px 10px;border-radius:8px;margin-bottom:10px;
+    background:#fdeef1;color:var(--accent);
+  }
+  .modal label{display:block;font-size:.82rem;font-weight:700;margin:10px 0 4px}
+  .modal .row{display:flex;gap:8px;margin-top:16px}
+  .modal .row .btn{flex:1}
+  .btn-stamp{background:var(--spring);color:#fff}
+  .btn-clear{background:#eee;color:var(--ink)}
+
+  /* ---------- Row + finish celebrations ---------- */
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:12px 22px;border-radius:30px;font-weight:700;
+    z-index:90;opacity:0;pointer-events:none;transition:opacity .3s;text-align:center;font-size:.95rem;
+    max-width:92vw;
+  }
+  .toast.show{opacity:1}
+  .finish-overlay{
+    position:fixed;inset:0;background:rgba(31,35,51,.92);z-index:100;
+    display:none;align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:20px;
+  }
+  .finish-overlay.show{display:flex}
+  .finish-card{background:#fff;border-radius:18px;padding:26px 22px;max-width:420px;width:100%;max-height:88vh;overflow:auto;position:relative;z-index:2}
+  .finish-card h2{
+    font-size:clamp(2.2rem,10vw,3.2rem);letter-spacing:3px;color:var(--accent);
+    animation:pop .5s cubic-bezier(.2,1.6,.4,1) both;
+  }
+  .finish-card .fsub{font-weight:700;margin:6px 0 2px;font-size:1.05rem}
+  .finish-card .ftime{color:#6b6f80;font-size:.85rem;margin-bottom:12px}
+  .finish-card .fshow{
+    background:var(--gold);border-radius:10px;padding:10px;font-weight:800;font-size:.9rem;margin:10px 0;
+  }
+  .finish-card .fmet{text-align:left;font-size:.85rem;margin-top:12px}
+  .finish-card .fmet h3{font-size:.9rem;margin-bottom:6px}
+  .finish-card .fmet li{margin-left:18px;line-height:1.5}
+  @keyframes pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+  .confetti{position:absolute;top:-14px;width:10px;height:16px;opacity:.9;animation:fall linear infinite;z-index:1}
+  @keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
+
+  /* ---------- Host leaderboard ---------- */
+  #host{max-width:900px;margin:0 auto}
+  .lb-title{text-align:center;font-size:clamp(1.6rem,4vw,2.6rem);margin:10px 0 2px}
+  .lb-sub{text-align:center;color:#6b6f80;margin-bottom:18px;font-size:1rem}
+  .lb-add{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px;justify-content:center}
+  .lb-add input[type=text]{flex:1;min-width:180px;max-width:320px}
+  .lb-add select{padding:12px;font-size:1rem;border:2px solid var(--line);border-radius:10px;background:#fff}
+  ol.lb-list{list-style:none;counter-reset:place;margin-top:8px}
+  ol.lb-list li{
+    counter-increment:place;display:flex;align-items:center;gap:14px;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px 18px;margin-bottom:8px;font-size:clamp(1.05rem,2.6vw,1.5rem);font-weight:700;
+  }
+  ol.lb-list li .medal{font-size:1.6em;width:1.6em;text-align:center}
+  ol.lb-list li .lb-side{font-size:.65em;padding:2px 10px;border-radius:20px;color:#fff}
+  ol.lb-list li .lb-time{margin-left:auto;color:#6b6f80;font-size:.65em;font-weight:600}
+  ol.lb-list li .lb-x{background:none;border:none;color:#c6c1b6;cursor:pointer;font-size:1em;padding:0 2px}
+  ol.lb-list li.overachiever{border:2px solid var(--gold);background:#fdf6e3}
+  .lb-section{font-weight:800;margin:22px 0 8px;font-size:1.1rem;color:#6b6f80;text-transform:uppercase;letter-spacing:1px;text-align:center}
+  .lb-empty{text-align:center;color:#9a958a;padding:26px;font-size:1.05rem}
+
+  .print-setup .row{display:flex;gap:10px;align-items:center;margin-top:10px}
+  .print-setup input[type=number]{width:90px;padding:10px;font-size:1rem;border:2px solid var(--line);border-radius:10px}
+
+  /* ---------- Print sheets ---------- */
+  #printArea{display:none}
+  @media print{
+    body *{visibility:hidden}
+    #printArea, #printArea *{visibility:visible}
+    #printArea{display:block;position:absolute;left:0;top:0;width:100%}
+    .psheet{page-break-after:always;padding:20px;font-family:Georgia,serif}
+    .psheet h2{text-align:center;font-size:1.3rem;margin-bottom:2px}
+    .psheet .psub{text-align:center;font-size:.78rem;margin-bottom:8px;color:#333}
+    .psheet .pmeta{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:8px}
+    .psheet table{width:100%;border-collapse:collapse;table-layout:fixed}
+    .psheet td{
+      border:1.5px solid #000;height:96px;vertical-align:top;padding:4px;
+      font-size:.6rem;line-height:1.3;text-align:center;
+    }
+    .psheet td .ptag{font-weight:bold;font-size:.55rem}
+    .psheet .prules{font-size:.66rem;margin-top:8px;line-height:1.45}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="sp">Spring</span> ✕ <span class="al">Alma</span> Celebration Bingo</h1>
+  <p class="tag">Meet someone new in every square · first to two rows wins</p>
+</header>
+
+<main>
+  <!-- Welcome -->
+  <section id="welcome" class="panel">
+    <label for="playerName">Your name</label>
+    <input type="text" id="playerName" placeholder="e.g. Priya" maxlength="40" autocomplete="off">
+    <label>Which side of the product are you on?</label>
+    <div class="side-pick">
+      <button class="side-btn spring" data-side="Spring">🌱 Spring</button>
+      <button class="side-btn alma" data-side="Alma">🔮 Alma</button>
+    </div>
+    <button class="btn btn-primary" id="startBtn">Get My Card 🎲</button>
+    <p class="hint">Everyone gets the same 25 squares in a different order. Squares marked
+    <strong style="color:var(--accent)">OTHER SIDE</strong> must be matched by someone from the other side of the product.</p>
+    <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px" class="print-setup">
+      <strong>Facilitator?</strong>
+      <div class="row">
+        <input type="number" id="printCount" min="1" max="150" value="130">
+        <button class="btn btn-ghost btn-small" id="printBtn">Print cards</button>
+        <button class="btn btn-ghost btn-small" id="hostBtn">Host leaderboard 📊</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Game -->
+  <section id="game" style="display:none">
+    <div class="toolbar">
+      <div class="who"><span id="whoName"></span> <span class="badge" id="whoSide"></span></div>
+      <button class="btn btn-ghost btn-small" id="newCardBtn">New Card</button>
+    </div>
+    <div class="rowmeter" id="rowMeter"></div>
+    <div class="grid" id="grid"></div>
+    <details class="rules">
+      <summary>📖 How to play</summary>
+      <ul>
+        <li>Find someone who matches a square and <strong>have the conversation</strong>.</li>
+        <li>Tap the square and record <strong>who</strong> + <strong>the specific detail</strong> that qualifies them.</li>
+        <li>Squares tagged <strong style="color:var(--accent)">OTHER SIDE</strong>: if you're Spring, find an Alma person, and vice versa. Untagged squares: anyone in the room.</li>
+        <li>Each person can appear only <strong>once</strong> on your card.</li>
+        <li>First to complete <strong>two rows</strong> (across) wins — show your finish screen to the host!</li>
+        <li>Fill the <strong>entire card</strong> to claim the 🏅 <strong>Overachiever Award</strong>!</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- Host leaderboard (projector screen) -->
+  <section id="host" style="display:none">
+    <h2 class="lb-title">🏆 Winners' Circle</h2>
+    <p class="lb-sub">First to two rows — in order of submission <span id="lbStatus" style="font-weight:700">· connecting…</span></p>
+    <div class="lb-add panel">
+      <input type="text" id="lbName" placeholder="Winner's name" maxlength="40" autocomplete="off">
+      <select id="lbSide"><option>Spring</option><option>Alma</option></select>
+      <select id="lbType"><option value="win">Two rows 🏆</option><option value="overachiever">Full card 🏅</option></select>
+      <button class="btn btn-primary" style="width:auto;margin-top:0" id="lbAddBtn">Add</button>
+    </div>
+    <div id="lbWinners"></div>
+    <div id="lbOverSection" style="display:none">
+      <div class="lb-section">🏅 Overachiever Award — full card</div>
+      <div id="lbOvers"></div>
+    </div>
+    <p style="text-align:center;margin-top:20px">
+      <button class="btn btn-ghost btn-small" id="lbBackBtn">← Back to game</button>
+      <button class="btn btn-ghost btn-small" id="lbResetBtn">Clear leaderboard</button>
+    </p>
+  </section>
+</main>
+
+<!-- Square modal -->
+<div class="overlay" id="squareOverlay">
+  <div class="modal">
+    <div class="prompt" id="modalPrompt"></div>
+    <div class="crossnote" id="modalCross" style="display:none"></div>
+    <label for="matchName">Who?</label>
+    <input type="text" id="matchName" placeholder="Their name" maxlength="40" autocomplete="off">
+    <label for="matchDetail">What's the detail that qualifies them?</label>
+    <input type="text" id="matchDetail" placeholder="e.g. ran NYC marathon 2024" maxlength="80" autocomplete="off">
+    <div class="row">
+      <button class="btn btn-stamp" id="stampBtn">Stamp it ✓</button>
+      <button class="btn btn-clear" id="cancelBtn">Cancel</button>
+    </div>
+    <button class="btn btn-clear" id="clearBtn" style="width:100%;margin-top:8px;display:none">Clear this square</button>
+  </div>
+</div>
+
+<!-- Toast for single-row celebration -->
+<div class="toast" id="toast"></div>
+
+<!-- Finish overlay -->
+<div class="finish-overlay" id="finishOverlay">
+  <div class="finish-card">
+    <h2 id="finishTitle">DOUBLE BINGO!</h2>
+    <div class="fsub" id="finishWho"></div>
+    <div class="ftime" id="finishTime"></div>
+    <div class="fshow" id="finishShow">🏆 Show this screen to the host to claim your place!</div>
+    <div class="fmet">
+      <h3>People you met:</h3>
+      <ul id="finishMet"></ul>
+    </div>
+    <button class="btn btn-primary" id="finishClose">Keep mingling 🎉</button>
+  </div>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+/* =====================================================
+   PROMPTS — verbatim from the "Company Celebration:
+   Bingo Card" doc. tag values:
+     'cross'  = must be matched by someone from the OTHER
+                side of the product than the player
+     'spring' = must be a Spring team member
+     'alma'   = must be an Alma team member
+     null     = anyone in the room qualifies
+   ===================================================== */
+const PROMPTS = [
+  // Work & product-related
+  { text: "Has been at Spring or Alma for less than 6 months", tag: "cross" },
+  { text: "Has been at Spring or Alma for more than 3 years", tag: "cross" },
+  { text: "Has talked to a member (Spring) or client (Alma) directly this month", tag: "cross" },
+  { text: "Has shipped a new feature in the last week", tag: null },
+  { text: "Is part of lifecycle marketing team", tag: null },
+  { text: "Is part of product marketing team", tag: null },
+  { text: "Works on something related to mobile app experience", tag: null },
+  { text: "Works on something related to provider/therapist matching", tag: null },
+  { text: "Has a background in mental health/clinical work before going into product", tag: null },
+  { text: "Has switched teams twice or more at Spring or Alma", tag: "cross" },
+  { text: "Works with data or analytics in their role", tag: null },
+  { text: "Works on a Spring or Alma feature that uses AI/ML directly", tag: "cross" },
+  { text: "Has presented at a Spring Company All-Hands this year", tag: "cross" },
+  // Cross-company connection
+  { text: "Has worked at another mental health company other than Spring or Alma", tag: "cross" },
+  { text: "Knew someone personally either at Spring or Alma before the integration", tag: "cross" },
+  // Fun / personal
+  { text: "Has 2 or more pets", tag: null },
+  { text: "Has run a marathon", tag: null },
+  { text: "Speaks 2 or more languages frequently", tag: null },
+  { text: "Has moved to a new city or state in the past 6 months", tag: null },
+  { text: "Has lived outside of the US in the past 5 years", tag: null },
+  { text: "Has more than 3 subscription services active right now that they are paying for", tag: null },
+  { text: "Has a Duolingo streak going", tag: null },
+  { text: "Is getting married in the next year", tag: null },
+  { text: "Alma team member who is LinkedIn connected with Gijo", tag: "alma" },
+  { text: "Spring team member who is LinkedIn connected with Lyndsey", tag: "spring" },
+];
+
+const ROWS_TO_WIN = 2;          // the doc: "Whoever gets two rows first wins!"
+const STORAGE_KEY = "teamBingo.v2";
+
+let state = null;   // {playerName, side, squares:[{prompt,tag,who,detail}], rowsCelebrated, finished, finishedAt}
+let activeIndex = null;
+let pickedSide = null;
+
+/* ---------- utilities ---------- */
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const buf = new Uint32Array(1);
+    crypto.getRandomValues(buf);
+    const j = buf[0] % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function save(){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {} }
+function load(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { const s = JSON.parse(raw); if (s && s.squares && s.squares.length === 25) return s; }
+  } catch(e) {}
+  return null;
+}
+function dealSquares(){
+  return shuffle(PROMPTS).map(p => ({ prompt: p.text, tag: p.tag, who: null, detail: null }));
+}
+function completedRows(sqs){
+  const rows = [];
+  for (let r = 0; r < 5; r++) {
+    if ([0,1,2,3,4].every(c => sqs[r*5+c].who)) rows.push(r);
+  }
+  return rows;
+}
+function otherSide(side){ return side === "Spring" ? "Alma" : "Spring"; }
+function tagLabel(tag){
+  if (tag === "cross") return "OTHER SIDE";
+  if (tag === "spring") return "SPRING";
+  if (tag === "alma") return "ALMA";
+  return null;
+}
+
+/* ---------- rendering ---------- */
+const $ = id => document.getElementById(id);
+
+function render(){
+  $("whoName").textContent = state.playerName;
+  const sideEl = $("whoSide");
+  sideEl.textContent = state.side;
+  sideEl.className = "badge " + state.side.toLowerCase();
+
+  const rows = completedRows(state.squares);
+  $("rowMeter").innerHTML =
+    `Rows: <span class="done">${rows.length}</span> / ${ROWS_TO_WIN} to win` +
+    (rows.length === 1 ? " — one more!" : "");
+
+  const winSet = new Set();
+  rows.forEach(r => [0,1,2,3,4].forEach(c => winSet.add(r*5+c)));
+
+  const grid = $("grid");
+  grid.innerHTML = "";
+  state.squares.forEach((sq, i) => {
+    const div = document.createElement("div");
+    div.className = "sq";
+    div.textContent = sq.prompt;
+    const lbl = tagLabel(sq.tag);
+    if (lbl) {
+      const chip = document.createElement("span");
+      chip.className = "tagchip " + sq.tag;
+      chip.textContent = lbl;
+      div.appendChild(chip);
+    }
+    if (sq.who) {
+      div.classList.add("filled");
+      const name = document.createElement("div");
+      name.className = "name";
+      name.textContent = sq.who;
+      div.appendChild(name);
+    }
+    if (winSet.has(i)) div.classList.add("winrow");
+    div.addEventListener("click", () => openSquare(i));
+    grid.appendChild(div);
+  });
+}
+
+/* ---------- square modal ---------- */
+function openSquare(i){
+  activeIndex = i;
+  const sq = state.squares[i];
+  $("modalPrompt").textContent = sq.prompt;
+  const cross = $("modalCross");
+  if (sq.tag === "cross") {
+    const os = otherSide(state.side);
+    cross.textContent = `↔ Must be ${os === "Alma" ? "an" : "a"} ${os} person (you're ${state.side})`;
+    cross.style.display = "block";
+  } else if (sq.tag === "spring" || sq.tag === "alma") {
+    cross.textContent = `↔ Must be a ${sq.tag === "spring" ? "Spring" : "Alma"} team member`;
+    cross.style.display = "block";
+  } else {
+    cross.style.display = "none";
+  }
+  $("matchName").value = sq.who || "";
+  $("matchDetail").value = sq.detail || "";
+  $("clearBtn").style.display = sq.who ? "block" : "none";
+  $("squareOverlay").classList.add("show");
+  setTimeout(() => $("matchName").focus(), 50);
+}
+function closeSquare(){ $("squareOverlay").classList.remove("show"); activeIndex = null; }
+function stamp(){
+  const who = $("matchName").value.trim();
+  const detail = $("matchDetail").value.trim();
+  if (!who) { $("matchName").focus(); return; }
+  if (!detail) { $("matchDetail").focus(); return; }
+  const dup = state.squares.some((sq, i) =>
+    i !== activeIndex && sq.who && sq.who.toLowerCase() === who.toLowerCase());
+  if (dup && !confirm(`"${who}" is already on your card. House rule: each person counts for one square only. Use them again anyway?`)) return;
+  state.squares[activeIndex].who = who;
+  state.squares[activeIndex].detail = detail;
+  finishMove();
+}
+function clearSquare(){
+  state.squares[activeIndex].who = null;
+  state.squares[activeIndex].detail = null;
+  finishMove();
+}
+function finishMove(){
+  closeSquare();
+  const rows = completedRows(state.squares);
+  const now = () => new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit", second:"2-digit"});
+  if (state.squares.every(sq => sq.who) && !state.blackout) {
+    state.blackout = true;
+    state.blackoutAt = now();
+    save(); render(); celebrateFinish("overachiever");
+    publishWin("overachiever");
+    return;
+  }
+  if (rows.length >= ROWS_TO_WIN && !state.finished) {
+    state.finished = true;
+    state.finishedAt = now();
+    save(); render(); celebrateFinish("win");
+    publishWin("win");
+    return;
+  }
+  if (rows.length > (state.rowsCelebrated || 0) && rows.length < ROWS_TO_WIN) {
+    state.rowsCelebrated = rows.length;
+    showToast(`🎉 Row complete! ${ROWS_TO_WIN - rows.length} more to win!`);
+  }
+  save(); render();
+}
+
+/* ---------- celebrations ---------- */
+let toastTimer = null;
+function showToast(msg){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3500);
+}
+function celebrateFinish(mode){
+  const over = mode === "overachiever";
+  $("finishTitle").textContent = over ? "🏅 OVERACHIEVER!" : "DOUBLE BINGO!";
+  $("finishShow").textContent = over
+    ? "🏅 Full card! Show the host to claim the Overachiever Award!"
+    : "🏆 Show this screen to the host to claim your place!";
+  $("finishWho").textContent = `${state.playerName} · ${state.side} side`;
+  $("finishTime").textContent = over
+    ? `Filled all 25 squares at ${state.blackoutAt}`
+    : `Finished two rows at ${state.finishedAt}`;
+  const met = $("finishMet");
+  met.innerHTML = "";
+  state.squares.filter(s => s.who).forEach(s => {
+    const li = document.createElement("li");
+    li.innerHTML = `<strong>${s.who}</strong> — ${s.detail}`;
+    met.appendChild(li);
+  });
+  const ov = $("finishOverlay");
+  ov.querySelectorAll(".confetti").forEach(c => c.remove());
+  const colors = ["#e85d75","#2e9e6b","#7a5af5","#f5b841","#ffffff"];
+  for (let i = 0; i < 70; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random()*100 + "vw";
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (2.5 + Math.random()*3) + "s";
+    c.style.animationDelay = (Math.random()*2) + "s";
+    ov.appendChild(c);
+  }
+  ov.classList.add("show");
+}
+
+/* ---------- lifecycle ---------- */
+function startGame(existing){
+  state = existing || {
+    playerName: $("playerName").value.trim(),
+    side: pickedSide,
+    squares: dealSquares(),
+    rowsCelebrated: 0,
+    finished: false,
+    finishedAt: null,
+  };
+  save();
+  $("welcome").style.display = "none";
+  $("game").style.display = "block";
+  render();
+}
+
+/* ---------- print mode ---------- */
+function buildPrintSheets(n){
+  const area = $("printArea");
+  area.innerHTML = "";
+  for (let k = 0; k < n; k++) {
+    const squares = dealSquares();
+    const sheet = document.createElement("div");
+    sheet.className = "psheet";
+    let rows = "";
+    for (let r = 0; r < 5; r++) {
+      rows += "<tr>";
+      for (let c = 0; c < 5; c++) {
+        const sq = squares[r*5 + c];
+        const lbl = tagLabel(sq.tag);
+        rows += `<td>${lbl ? `<div class="ptag">[${lbl}]</div>` : ""}${sq.prompt}<br><br>Who: ________<br>Detail: ________</td>`;
+      }
+      rows += "</tr>";
+    }
+    sheet.innerHTML = `
+      <h2>Spring ✕ Alma Celebration Bingo</h2>
+      <div class="psub">Card ${k+1} of ${n}</div>
+      <div class="pmeta"><span>Name: ____________________</span><span>Side: ☐ Spring ☐ Alma</span><span>Date: __________</span></div>
+      <table>${rows}</table>
+      <div class="prules">
+        <strong>How to play:</strong> For squares marked [OTHER SIDE], find someone from the other side of the
+        product than you (Spring ↔ Alma). [SPRING]/[ALMA] squares need a person from that team. Anyone in the room
+        qualifies for the rest. To claim a square, document <strong>who</strong> and the <strong>specific detail</strong>
+        that qualifies them. Each person may appear only once on your card. <strong>Whoever gets two rows first wins!</strong>
+        Fill the entire card to claim the Overachiever Award!
+      </div>`;
+    area.appendChild(sheet);
+  }
+}
+
+/* ---------- cloud win publishing (Firebase, optional) ---------- */
+const PENDING_KEY = "teamBingoPendingWins.v1";
+function queuePendingWin(entry){
+  try {
+    const q = JSON.parse(localStorage.getItem(PENDING_KEY) || "[]");
+    q.push(entry);
+    localStorage.setItem(PENDING_KEY, JSON.stringify(q));
+  } catch(e) {}
+}
+function publishWin(type){
+  const entry = {
+    name: state.playerName,
+    side: state.side,
+    type,
+    at: new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}),
+  };
+  if (window.cloudPublish) {
+    window.cloudPublish(entry).catch(() => queuePendingWin(entry));
+  } else {
+    queuePendingWin(entry);
+  }
+}
+
+/* ---------- host leaderboard ---------- */
+const LB_KEY = "teamBingoLeaderboard.v1";
+let cloudEntries = null;   // null = no live sync; array = live entries in submission order
+function lbLoad(){
+  try { const raw = localStorage.getItem(LB_KEY); if (raw) return JSON.parse(raw) || []; } catch(e) {}
+  return [];
+}
+function lbSave(list){ try { localStorage.setItem(LB_KEY, JSON.stringify(list)); } catch(e) {} }
+
+function lbRender(){
+  const list = cloudEntries !== null ? cloudEntries : lbLoad();
+  const wins = list.filter(e => e.type === "win");
+  const overs = list.filter(e => e.type === "overachiever");
+  const medals = ["🥇","🥈","🥉"];
+
+  const entryHtml = (e, idx, medal) => `
+    <li class="${e.type === "overachiever" ? "overachiever" : ""}">
+      <span class="medal">${medal}</span>
+      <span>${e.name}</span>
+      <span class="lb-side ${e.side.toLowerCase()}" style="background:var(--${e.side.toLowerCase()})">${e.side}</span>
+      <span class="lb-time">${e.at}</span>
+      <button class="lb-x" data-id="${e.id}" title="Remove">✕</button>
+    </li>`;
+
+  $("lbWinners").innerHTML = wins.length
+    ? `<ol class="lb-list">${wins.map((e,i) => entryHtml(e, i, medals[i] || `#${i+1}`)).join("")}</ol>`
+    : `<div class="lb-empty">No winners yet — the room is still mingling! 👀</div>`;
+
+  $("lbOverSection").style.display = overs.length ? "block" : "none";
+  $("lbOvers").innerHTML = `<ol class="lb-list">${overs.map(e => entryHtml(e, 0, "🏅")).join("")}</ol>`;
+
+  document.querySelectorAll(".lb-x").forEach(b => b.addEventListener("click", () => {
+    if (cloudEntries !== null && window.cloudRemove) {
+      window.cloudRemove(b.dataset.id);
+    } else {
+      lbSave(lbLoad().filter(e => String(e.id) !== b.dataset.id));
+      lbRender();
+    }
+  }));
+}
+window.lbCloudUpdate = entries => { cloudEntries = entries; lbRender(); };
+window.lbSetStatus = (text, color) => {
+  const el = $("lbStatus");
+  el.textContent = "· " + text;
+  el.style.color = color;
+};
+function showHost(show){
+  $("host").style.display = show ? "block" : "none";
+  $("welcome").style.display = show ? "none" : (state ? "none" : "block");
+  $("game").style.display = show ? "none" : (state ? "block" : "none");
+  if (show) lbRender();
+}
+
+/* ---------- wire-up ---------- */
+$("hostBtn").addEventListener("click", () => showHost(true));
+$("lbBackBtn").addEventListener("click", () => showHost(false));
+$("lbResetBtn").addEventListener("click", () => {
+  if (!confirm("Clear the entire leaderboard?")) return;
+  if (cloudEntries !== null && window.cloudClear) window.cloudClear();
+  lbSave([]); lbRender();
+});
+$("lbAddBtn").addEventListener("click", () => {
+  const name = $("lbName").value.trim();
+  if (!name) { $("lbName").focus(); return; }
+  const entry = {
+    name,
+    side: $("lbSide").value,
+    type: $("lbType").value,
+    at: new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}),
+  };
+  if (cloudEntries !== null && window.cloudPublish) {
+    window.cloudPublish(entry);   // snapshot listener re-renders
+  } else {
+    const list = lbLoad();
+    list.push({ ...entry, id: Date.now() });
+    lbSave(list);
+    lbRender();
+  }
+  $("lbName").value = "";
+});
+$("lbName").addEventListener("keydown", e => { if (e.key === "Enter") $("lbAddBtn").click(); });
+
+document.querySelectorAll(".side-btn").forEach(b => {
+  b.addEventListener("click", () => {
+    pickedSide = b.dataset.side;
+    document.querySelectorAll(".side-btn").forEach(x => x.classList.remove("sel"));
+    b.classList.add("sel");
+  });
+});
+$("startBtn").addEventListener("click", () => {
+  if (!$("playerName").value.trim()) { $("playerName").focus(); return; }
+  if (!pickedSide) { alert("Pick your side — Spring or Alma!"); return; }
+  startGame();
+});
+$("playerName").addEventListener("keydown", e => { if (e.key === "Enter") $("startBtn").click(); });
+$("matchDetail").addEventListener("keydown", e => { if (e.key === "Enter") stamp(); });
+$("stampBtn").addEventListener("click", stamp);
+$("cancelBtn").addEventListener("click", closeSquare);
+$("clearBtn").addEventListener("click", clearSquare);
+$("squareOverlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeSquare(); });
+$("finishClose").addEventListener("click", () => $("finishOverlay").classList.remove("show"));
+$("newCardBtn").addEventListener("click", () => {
+  const progress = state.squares.some(sq => sq.who);
+  if (progress && !confirm("Deal a new card? Your current progress will be lost.")) return;
+  pickedSide = state.side;
+  $("playerName").value = state.playerName;
+  startGame();
+});
+$("printBtn").addEventListener("click", () => {
+  const n = Math.min(150, Math.max(1, parseInt($("printCount").value, 10) || 1));
+  buildPrintSheets(n);
+  window.print();
+});
+
+/* ---------- boot ---------- */
+const saved = load();
+if (saved) startGame(saved);
+if (location.hash === "#host") showHost(true);
+</script>
+
+<script type="module">
+/* =====================================================
+   Live leaderboard sync (Firebase Firestore).
+   Optional: if the CDN or network is unreachable the game
+   plays fully offline and the host adds winners manually.
+   Reuses the existing "yankeechallenge" Firebase project
+   (web config is public by design; access is governed by
+   Firestore security rules + anonymous auth).
+   ===================================================== */
+const EVENT_ID = "spring-alma-2026";
+const firebaseConfig = {
+  apiKey: "AIzaSyB-EYpR5ZOE541JtsiRMVNyn_yWdA42U-o",
+  authDomain: "yankeechallenge.firebaseapp.com",
+  projectId: "yankeechallenge",
+  storageBucket: "yankeechallenge.firebasestorage.app",
+  messagingSenderId: "633191965321",
+  appId: "1:633191965321:web:95a27acfc8dec6fdd1dc58",
+};
+
+try {
+  const [{ initializeApp }, { getAuth, signInAnonymously }, fs] = await Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"),
+  ]);
+  const app = initializeApp(firebaseConfig);
+  await signInAnonymously(getAuth(app));
+  const db = fs.getFirestore(app);
+  const winsCol = fs.collection(db, "bingoEvents", EVENT_ID, "wins");
+
+  window.cloudPublish = entry =>
+    fs.addDoc(winsCol, { ...entry, ts: fs.serverTimestamp() });
+  window.cloudRemove = id => fs.deleteDoc(fs.doc(winsCol, id));
+  window.cloudClear = async () => {
+    const snap = await fs.getDocs(winsCol);
+    await Promise.all(snap.docs.map(d => fs.deleteDoc(d.ref)));
+  };
+
+  // drain wins that were queued while offline
+  try {
+    const q = JSON.parse(localStorage.getItem("teamBingoPendingWins.v1") || "[]");
+    if (q.length) {
+      localStorage.removeItem("teamBingoPendingWins.v1");
+      for (const entry of q) window.cloudPublish(entry).catch(() => {});
+    }
+  } catch (e) {}
+
+  fs.onSnapshot(
+    fs.query(winsCol, fs.orderBy("ts", "asc")),
+    snap => {
+      const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      window.lbSetStatus && window.lbSetStatus("LIVE — wins publish automatically", "#2e9e6b");
+      window.lbCloudUpdate && window.lbCloudUpdate(entries);
+    },
+    () => window.lbSetStatus && window.lbSetStatus("offline — add winners manually", "#e85d75")
+  );
+} catch (e) {
+  window.lbSetStatus && window.lbSetStatus("offline — add winners manually", "#e85d75");
+}
+</script>
+</body>
+</html>
