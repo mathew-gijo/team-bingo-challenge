@@ -113,6 +113,11 @@
   /* ---------- Toolbar / progress ---------- */
   .toolbar{display:flex;gap:8px;justify-content:space-between;align-items:center;margin:14px 2px 10px;flex-wrap:wrap}
   .who{font-weight:750;font-size:1rem}
+  button.who{
+    background:none;border:none;cursor:pointer;padding:6px 4px;min-height:44px;
+    display:inline-flex;align-items:center;gap:2px;text-align:left;
+  }
+  button.who .edit{color:var(--muted);font-size:.85em;margin-left:4px}
   .who .badge{
     display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;
     color:#fff;vertical-align:2px;margin-left:6px;
@@ -338,7 +343,9 @@
   <!-- Game -->
   <section id="game" style="display:none">
     <div class="toolbar">
-      <div class="who"><span id="whoName"></span> <span class="badge" id="whoSide"></span></div>
+      <button class="who" id="editWho" title="Edit your name or side" aria-label="Edit your name or side">
+        <span id="whoName"></span> <span class="badge" id="whoSide"></span> <span class="edit">✎</span>
+      </button>
       <button class="btn btn-ghost btn-small" id="newCardBtn">New Card</button>
     </div>
     <div class="goal" id="goal"></div>
@@ -355,6 +362,24 @@
       </ul>
     </details>
   </section>
+
+  <!-- Edit name/side -->
+  <div class="overlay" id="profileOverlay">
+    <div class="modal">
+      <div class="prompt">Fix your details</div>
+      <label for="editName">Your name</label>
+      <input type="text" id="editName" maxlength="40" autocomplete="off">
+      <label>Your side</label>
+      <div class="side-pick">
+        <button class="side-btn spring" data-side="Spring">🌱 Spring</button>
+        <button class="side-btn alma" data-side="Alma">🔮 Alma</button>
+      </div>
+      <div class="row">
+        <button class="btn btn-stamp" id="profileSaveBtn">Save</button>
+        <button class="btn btn-clear" id="profileCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Host leaderboard (projector screen) -->
   <section id="host" style="display:none">
@@ -838,6 +863,24 @@ $("newCardBtn").addEventListener("click", () => {
   $("playerName").value = state.playerName;
   startGame();
 });
+$("editWho").addEventListener("click", () => {
+  $("editName").value = state.playerName;
+  pickedSide = state.side;
+  document.querySelectorAll(".side-btn").forEach(x => x.classList.toggle("sel", x.dataset.side === pickedSide));
+  $("profileOverlay").classList.add("show");
+  setTimeout(() => $("editName").focus(), 50);
+});
+$("profileSaveBtn").addEventListener("click", () => {
+  const name = $("editName").value.trim();
+  if (!name) { $("editName").focus(); return; }
+  state.playerName = name;
+  state.side = pickedSide || state.side;
+  save(); render();
+  $("profileOverlay").classList.remove("show");
+});
+$("profileCancelBtn").addEventListener("click", () => $("profileOverlay").classList.remove("show"));
+$("profileOverlay").addEventListener("click", e => { if (e.target === e.currentTarget) $("profileOverlay").classList.remove("show"); });
+$("editName").addEventListener("keydown", e => { if (e.key === "Enter") $("profileSaveBtn").click(); });
 $("printBtn").addEventListener("click", () => {
   const n = Math.min(150, Math.max(1, parseInt($("printCount").value, 10) || 1));
   buildPrintSheets(n);
