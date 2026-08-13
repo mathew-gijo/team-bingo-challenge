@@ -3,49 +3,66 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#f7f6f2" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#14161d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f7f6f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1a16" media="(prefers-color-scheme: dark)">
 <title>Spring ✕ Alma Celebration Bingo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Brand fonts (Muoto / Basier Circle / Tiempos) are licensed; these are the closest free equivalents -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#f7f6f2;
+    /* Palette drawn from springhealth.com + helloalma.com design systems.
+       Spring: mint #8dff9d, teal #068262, forest #01382e, orange #ff4f2c, paper #f8f6f2, ink #150c06.
+       Alma: cream #f7f6f1, sage #497557/#2f5b3d, slate blue #3477ac/#285e87, soft blue #e8eff5. */
+    --font-sans:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+    --bg:#f7f6f1;
     --card:#ffffff;
-    --ink:#1c1e26;
-    --muted:#5f6472;
-    --spring:#1e8e5f;
-    --spring-soft:#e5f5ee;
-    --alma:#6d4df6;
-    --alma-soft:#efeafe;
-    --accent:#e0475f;
-    --accent-soft:#fdecef;
-    --gold:#f2b23e;
-    --gold-soft:#fdf3df;
-    --line:#e6e2d8;
-    --shadow:0 1px 3px rgba(28,30,38,.06), 0 8px 24px rgba(28,30,38,.05);
+    --ink:#150c06;
+    --muted:#6a7378;
+    --spring:#068262;
+    --spring-deep:#01382e;
+    --spring-bright:#8dff9d;
+    --spring-soft:#e6f5ef;
+    --alma:#3477ac;
+    --alma-deep:#285e87;
+    --alma-soft:#e8eff5;
+    --accent:#ff4f2c;
+    --accent-soft:#ffe9e2;
+    --gold:#e0a458;
+    --gold-soft:#f9efdd;
+    --line:#efece6;
+    --line-strong:#e0dcd2;
+    --shadow:0 1px 3px rgba(21,12,6,.06), 0 8px 24px rgba(21,12,6,.05);
     --radius:16px;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#14161d;
-      --card:#1e212b;
-      --ink:#eef0f5;
-      --muted:#9aa0ae;
-      --spring:#34c98a;
-      --spring-soft:#173226;
-      --alma:#9b83ff;
-      --alma-soft:#251f3d;
-      --accent:#ff6b84;
-      --accent-soft:#3a1f26;
-      --gold:#ffc35c;
-      --gold-soft:#33291a;
-      --line:#2c3040;
+      --bg:#0f1a16;
+      --card:#182720;
+      --ink:#f2f1ec;
+      --muted:#98a8a0;
+      --spring:#8dff9d;
+      --spring-deep:#8dff9d;
+      --spring-bright:#8dff9d;
+      --spring-soft:#12352a;
+      --alma:#7db3e0;
+      --alma-deep:#a4cceb;
+      --alma-soft:#182c3d;
+      --accent:#ff7451;
+      --accent-soft:#3c1f16;
+      --gold:#ecba74;
+      --gold-soft:#33281a;
+      --line:#24352d;
+      --line-strong:#2f453a;
       --shadow:0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.3);
     }
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%}
   body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:var(--font-sans);
     background:var(--bg);color:var(--ink);min-height:100vh;
     touch-action:manipulation;
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
@@ -54,7 +71,7 @@
   :focus-visible{outline:3px solid var(--alma);outline-offset:2px;border-radius:6px}
 
   header{text-align:center;padding:24px 16px 4px}
-  header h1{font-size:clamp(1.25rem,4.5vw,1.6rem);letter-spacing:-.02em;font-weight:800}
+  header h1{font-family:var(--font-serif);font-size:clamp(1.35rem,4.8vw,1.75rem);letter-spacing:-.01em;font-weight:700}
   header h1 .sp{color:var(--spring)} header h1 .al{color:var(--alma)}
   header p.tag{color:var(--muted);font-size:.85rem;margin-top:6px}
   main{max-width:600px;margin:0 auto;padding:12px 12px 56px}
@@ -100,7 +117,12 @@
     display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;
     color:#fff;vertical-align:2px;margin-left:6px;
   }
-  .badge.spring{background:var(--spring)} .badge.alma{background:var(--alma)}
+  .badge.spring{background:var(--spring);color:var(--on-solid-spring,#fff)} .badge.alma{background:var(--alma)}
+  @media (prefers-color-scheme: dark){
+    .badge.spring,.tagchip.spring,.btn-stamp,.lb-side.spring{color:#0f1a16 !important}
+    .badge.alma,.tagchip.alma,.lb-side.alma{color:#0f1a16 !important}
+    .tagchip.cross{color:#fff}
+  }
   .goal{
     display:flex;gap:8px;justify-content:center;margin:0 0 12px;
   }
@@ -142,7 +164,11 @@
     content:"✓";position:absolute;top:3px;right:6px;color:var(--spring);
     font-weight:900;font-size:.75rem;
   }
-  .sq.winrow{border-color:var(--gold);background:var(--gold-soft);box-shadow:inset 0 0 0 1.5px var(--gold)}
+  .sq.winrow{border-color:#01382e;background:#8dff9d}
+  .sq.winrow .lbl{color:#01382e !important}
+  .sq.winrow .name{color:#01382e}
+  .sq.winrow.filled::after{color:#01382e}
+  .sq.winrow .tagchip{opacity:.85}
 
   details.rules{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:4px 18px}
   details.rules summary{cursor:pointer;font-weight:700;padding:14px 0;list-style-position:inside}
@@ -198,6 +224,7 @@
     max-height:86vh;overflow:auto;position:relative;z-index:2;
   }
   .finish-card h2{
+    font-family:var(--font-serif);
     font-size:clamp(1.7rem,8vw,2.5rem);letter-spacing:-.01em;color:var(--accent);
     animation:pop .5s cubic-bezier(.2,1.6,.4,1) both;
   }
@@ -221,7 +248,7 @@
 
   /* ---------- Host leaderboard ---------- */
   #host{max-width:900px;margin:0 auto}
-  .lb-title{text-align:center;font-size:clamp(1.5rem,4vw,2.4rem);margin:12px 0 4px;letter-spacing:-.01em}
+  .lb-title{font-family:var(--font-serif);text-align:center;font-size:clamp(1.5rem,4vw,2.4rem);margin:12px 0 4px;letter-spacing:-.01em}
   .lb-sub{text-align:center;color:var(--muted);margin-bottom:18px;font-size:.95rem}
   .lb-add{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px;justify-content:center}
   .lb-add input[type=text]{flex:1;min-width:170px;max-width:320px}
@@ -628,7 +655,7 @@ function celebrateFinish(mode){
   });
   const ov = $("finishOverlay");
   ov.querySelectorAll(".confetti").forEach(c => c.remove());
-  const colors = ["#e0475f","#1e8e5f","#6d4df6","#f2b23e","#ffffff"];
+  const colors = ["#ff4f2c","#068262","#3477ac","#8dff9d","#f7f6f1"];
   for (let i = 0; i < 70; i++) {
     const c = document.createElement("div");
     c.className = "confetti";
@@ -734,7 +761,7 @@ function lbRender(){
     const li = document.createElement("li");
     if (e.type === "overachiever") li.className = "overachiever";
     li.innerHTML = `<span class="medal"></span><span class="lb-nm"></span>` +
-      `<span class="lb-side" style="background:var(--${e.side.toLowerCase()})"></span>` +
+      `<span class="lb-side ${e.side.toLowerCase()}" style="background:var(--${e.side.toLowerCase()})"></span>` +
       `<span class="lb-time"></span><button class="lb-x" title="Remove">✕</button>`;
     li.querySelector(".medal").textContent = medal;
     li.querySelector(".lb-nm").textContent = e.name;
@@ -901,13 +928,13 @@ try {
     fs.query(winsCol, fs.orderBy("ts", "asc")),
     snap => {
       const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      window.lbSetStatus && window.lbSetStatus("LIVE — wins publish automatically", "#1e8e5f");
+      window.lbSetStatus && window.lbSetStatus("LIVE — wins publish automatically", "#068262");
       window.lbCloudUpdate && window.lbCloudUpdate(entries);
     },
-    () => window.lbSetStatus && window.lbSetStatus("offline — add winners manually", "#e0475f")
+    () => window.lbSetStatus && window.lbSetStatus("offline — add winners manually", "#ff4f2c")
   );
 } catch (e) {
-  window.lbSetStatus && window.lbSetStatus("offline — add winners manually", "#e0475f");
+  window.lbSetStatus && window.lbSetStatus("offline — add winners manually", "#ff4f2c");
 }
 </script>
 </body>
