@@ -288,6 +288,8 @@
   }
   .lb-empty{text-align:center;color:var(--muted);padding:30px 20px;font-size:1rem}
 
+  body.host-mode header p.tag{display:none}
+
   /* ---------- Selfies ---------- */
   .selfie-row{display:flex;align-items:center;gap:12px;margin-top:16px}
   .selfie-hint{font-size:.78rem;color:var(--muted);margin-top:6px}
@@ -333,7 +335,7 @@
     .qr-join .qr-box svg{width:190px;height:190px;display:block}
     .qr-join .qr-txt{display:flex;flex-direction:column;gap:6px}
     .qr-join .qr-txt strong{font-size:1.25rem;font-family:var(--font-serif)}
-    .qr-join .qr-txt span{color:var(--muted);font-size:.9rem;max-width:280px;word-break:break-all}
+    .qr-join .qr-txt span{color:var(--muted);font-size:.85rem;white-space:nowrap}
     #host .qr-join{max-width:560px;margin:8px auto 18px;padding:12px}
     #host .qr-join .qr-box svg{width:140px;height:140px}
   }
@@ -424,8 +426,8 @@
 
   <!-- Host leaderboard (projector screen) -->
   <section id="host" style="display:none">
-    <h2 class="lb-title">Winners’ Circle</h2>
-    <p class="lb-sub">First to a row + a column — in order of submission <span id="lbStatus" style="font-weight:700">· connecting…</span></p>
+    <h2 class="lb-title">Leaderboard</h2>
+    <p class="lb-sub">First to a row and column wins · full card earns the Overachiever Award <span id="lbStatus" style="font-weight:700">· connecting…</span></p>
     <div class="qr-join">
       <div class="qr-box" data-qr></div>
       <div class="qr-txt"><strong>Scan to join</strong><span>mathew-gijo.github.io/team-bingo-challenge</span></div>
@@ -954,6 +956,7 @@ window.lbSetStatus = (text, color) => {
   el.style.color = color;
 };
 function showHost(show){
+  document.body.classList.toggle("host-mode", show);
   $("host").style.display = show ? "block" : "none";
   $("welcome").style.display = show ? "none" : (state ? "none" : "block");
   $("game").style.display = show ? "none" : (state ? "block" : "none");
@@ -1151,13 +1154,13 @@ try {
     fs.query(winsCol, fs.orderBy("ts", "asc")),
     snap => {
       const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      window.lbSetStatus && window.lbSetStatus("LIVE — wins publish automatically", "#068262");
+      window.lbSetStatus && window.lbSetStatus("LIVE", "#068262");
       window.lbCloudUpdate && window.lbCloudUpdate(entries);
     },
-    () => window.lbSetStatus && window.lbSetStatus("offline — add winners manually", "#ff4f2c")
+    () => window.lbSetStatus && window.lbSetStatus("offline — manual mode", "#ff4f2c")
   );
 } catch (e) {
-  window.lbSetStatus && window.lbSetStatus("offline — add winners manually", "#ff4f2c");
+  window.lbSetStatus && window.lbSetStatus("offline — manual mode", "#ff4f2c");
 }
 </script>
 </body>
