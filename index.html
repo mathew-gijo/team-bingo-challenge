@@ -306,8 +306,15 @@
     display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:4px;
   }
   .selfie-wall figure{
+    position:relative;
     background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:0;
   }
+  .selfie-wall .sw-x{
+    position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;
+    border:none;background:rgba(21,12,6,.55);color:#fff;font-size:.75rem;cursor:pointer;
+    line-height:1;opacity:.75;
+  }
+  .selfie-wall .sw-x:hover{opacity:1}
   .selfie-wall img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
   .selfie-wall figcaption{
     font-size:.72rem;padding:6px 8px;color:var(--muted);font-weight:600;
@@ -1092,6 +1099,7 @@ try {
   const selfiesCol = fs.collection(db, "bingoEvents", EVENT_ID, "selfies");
   window.cloudSelfie = entry =>
     fs.addDoc(selfiesCol, { ...entry, ts: fs.serverTimestamp() });
+  window.cloudSelfieRemove = id => fs.deleteDoc(fs.doc(selfiesCol, id));
 
   // drain wins + selfies that were queued while offline
   for (const [key, publish] of [
@@ -1124,7 +1132,15 @@ try {
         img.loading = "lazy";
         const cap = document.createElement("figcaption");
         cap.textContent = `${e.player} + ${e.who}`;
-        fig.append(img, cap);
+        const del = document.createElement("button");
+        del.className = "sw-x";
+        del.setAttribute("aria-label", `Remove photo of ${e.player} and ${e.who}`);
+        del.textContent = "✕";
+        del.addEventListener("click", () => {
+          if (confirm(`Remove the photo of ${e.player} + ${e.who}?`))
+            window.cloudSelfieRemove(d.id);
+        });
+        fig.append(img, cap, del);
         wall.appendChild(fig);
       });
     },
